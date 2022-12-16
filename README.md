@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/pmishchenko-ua/jwt-keyfunc)](https://goreportcard.com/report/github.com/pmishchenko-ua/jwt-keyfunc) [![Go Reference](https://pkg.go.dev/badge/github.com/pmishchenko-ua/jwt-keyfunc.svg)](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/singlestore-labs/jwt-keyfunc)](https://goreportcard.com/report/github.com/singlestore-labs/jwt-keyfunc) [![Go Reference](https://pkg.go.dev/badge/github.com/singlestore-labs/jwt-keyfunc.svg)](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc)
 
 # keyfunc
 
@@ -6,10 +6,6 @@ The purpose of this package is to provide a
 [`jwt.Keyfunc`](https://pkg.go.dev/github.com/golang-jwt/jwt#Keyfunc) for the
 [github.com/golang-jwt/jwt](https://github.com/golang-jwt/jwt) package using a JSON Web Key Set (JWK Set or JWKS) for
 parsing and verifying JSON Web Tokens (JWTs).
-
-There is legacy support for `github.com/dgrijalva/jwt-go` and its popular forks. It's in a separate project to keep this
-project minimal. If your use case supports a legacy fork, please
-see: [github.com/MicahParks/compatibility-keyfunc](https://github.com/MicahParks/compatibility-keyfunc).
 
 It's common for an identity provider, such as [Keycloak](https://www.keycloak.org/)
 or [Amazon Cognito (AWS)](https://aws.amazon.com/cognito/) to expose a JWKS via an HTTPS endpoint. This package has the
@@ -48,11 +44,11 @@ this Go package, please open an issue or pull request.
 For complete examples, please see the `examples` directory.
 
 ```go
-import keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
+import keyfunc "github.com/singlestore-labs/jwt-keyfunc"
 ```
 
 #### A note on read-only keys
-The [`JWKS.ReadOnlyKeys`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#JWKS.ReadOnlyKeys) method returns a read-only
+The [`JWKS.ReadOnlyKeys`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#JWKS.ReadOnlyKeys) method returns a read-only
 copy of a `map[string]interface{}`. The key to this map is the key ID, `kid`, and the value is the cryptographic key.
 This is a useful map for use of keys within a JWKS outside of `github.com/golang-jwt/jwt`.
 
@@ -62,7 +58,7 @@ are modified, it may cause undefined behavior.
 ### Preconditions: Acquire the JWKS URL, JSON, or gather cryptographic keys (given keys)
 
 A JWKS URL is not required, one can be created directly from JSON with the
-[`keyfunc.NewJSON`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#NewJSON) function.
+[`keyfunc.NewJSON`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#NewJSON) function.
 
 ```go
 // Get the JWKS URL from an environment variable.
@@ -121,7 +117,7 @@ if err != nil {
 }
 ```
 
-The [`JWKS.Keyfunc`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#JWKS.Keyfunc) method will automatically select the
+The [`JWKS.Keyfunc`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#JWKS.Keyfunc) method will automatically select the
 key with the matching `kid` (if present) and return its public key as the correct Go type to its caller.
 
 ## Test coverage
@@ -134,8 +130,8 @@ coded JWTs cannot check for parsing and validation errors, just errors within th
 
 ## Additional features
 These features can be configured by populating fields in the
-[`keyfunc.Options`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#Options) argument to the
-[`keyfunc.Get`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#Get) function.
+[`keyfunc.Options`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#Options) argument to the
+[`keyfunc.Get`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#Get) function.
 * A background refresh of the JWKS keys can be performed.
 	* A custom background refresh interval can be specified. For an example, please see the `examples/interval`
 	  directory.
@@ -154,10 +150,10 @@ These features can be configured by populating fields in the
 * A custom HTTP response extractor can be provided to get the raw JWKS JSON from the `*http.Response`. For example, the
   HTTP response code could be checked. Implementations are responsible for closing the response body.
 	* By default,
-	  the [`keyfunc.ResponseExtractorStatusOK`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#ResponseExtractorStatusOK)
+	  the [`keyfunc.ResponseExtractorStatusOK`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#ResponseExtractorStatusOK)
 	  function is used. The default behavior changed in `v1.4.0`.
 * A custom whitelist of acceptable JSON Web Key `"use"` parameter values can be specified. Values not whitelisted will
-  cause an error from the [`.Keyfunc`](https://pkg.go.dev/github.com/pmishchenko-ua/jwt-keyfunc#JWKS.Keyfunc) method. This
+  cause an error from the [`.Keyfunc`](https://pkg.go.dev/github.com/singlestore-labs/jwt-keyfunc#JWKS.Keyfunc) method. This
   whitelist can be disabled with the `JWKUseNoWhitelist` option.
 	* By default, only JSON Web Keys with a `"use"` parameter value of `"sig"`, an empty string `""`, or a completely
 	  omitted `"use"` parameter will be returned. The default behavior changed in `v1.5.0`.

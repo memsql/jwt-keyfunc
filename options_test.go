@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
+	keyfunc "github.com/singlestore-labs/jwt-keyfunc"
 )
 
 func TestResponseExtractorStatusOK(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
+
 	// _ "embed"
 	"errors"
 	"fmt"
@@ -21,7 +22,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
+	keyfunc "github.com/singlestore-labs/jwt-keyfunc"
 )
 
 const (

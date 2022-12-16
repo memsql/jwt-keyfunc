@@ -13,8 +13,8 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
-	"github.com/pmishchenko-ua/jwt-keyfunc/examples/custom/method"
+	keyfunc "github.com/singlestore-labs/jwt-keyfunc"
+	"github.com/singlestore-labs/jwt-keyfunc/examples/custom/method"
 )
 
 const (

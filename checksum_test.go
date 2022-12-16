@@ -12,8 +12,10 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
+	keyfunc "github.com/singlestore-labs/jwt-keyfunc"
 )
+
+// TestChecksum confirms that the JWKS will only perform a refresh if a new JWKS is read from the remote resource.
 
 // TestChecksum confirms that the JWKS will only perform a refresh if a new JWKS is read from the remote resource.
 func TestChecksum(t *testing.T) {

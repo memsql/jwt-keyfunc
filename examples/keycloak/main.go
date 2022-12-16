@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
+	keyfunc "github.com/singlestore-labs/jwt-keyfunc"
 )
 
 func main() {

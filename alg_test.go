@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 
-	"github.com/MicahParks/keyfunc"
+	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
 )
 
 func TestAlgMismatch(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAlgMismatch(t *testing.T) {
 	}
 
 	_, err = jwt.Parse(jwtB64, jwks.Keyfunc)
-	if !errors.Is(err, keyfunc.ErrJWKAlgMismatch) {
-		t.Fatalf("Expected ErrJWKAlgMismatch, got %v", err)
+	if !errors.Is(err, keyfunc.ErrNoMatchingKey) {
+		t.Fatalf("Expected ErrNoMatchingKey, got %v", err)
 	}
 }

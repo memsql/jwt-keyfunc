@@ -25,13 +25,18 @@ type GivenKeyOptions struct {
 }
 
 // NewGiven creates a JWKS from a map of given keys.
+// NewGiven creates a JWKS from a map of given keys.
 func NewGiven(givenKeys map[string]GivenKey) (jwks *JWKS) {
-	keys := make(map[string]parsedJWK)
+	keys := make(map[string][]ParsedJWK)
 
 	for kid, given := range givenKeys {
-		keys[kid] = parsedJWK{
-			algorithm: given.algorithm,
-			public:    given.inter,
+		keys[kid] = []ParsedJWK{
+			{
+				algorithm: given.algorithm,
+				Public:    given.inter,
+				kid:       kid,
+				kty:       GetTypeForAlg(given.algorithm),
+			},
 		}
 	}
 
@@ -43,7 +48,7 @@ func NewGiven(givenKeys map[string]GivenKey) (jwks *JWKS) {
 // NewGivenCustom creates a new GivenKey given an untyped variable. The key argument is expected to be a supported
 // by the jwt package used.
 //
-// See the https://pkg.go.dev/github.com/golang-jwt/jwt/v4#RegisterSigningMethod function for registering an unsupported
+// See the https://pkg.go.dev/github.com/golang-jwt/jwt#RegisterSigningMethod function for registering an unsupported
 // signing method.
 //
 // Deprecated: This function does not allow the user to specify the JWT's signing algorithm. Use

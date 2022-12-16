@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 
-	"github.com/MicahParks/keyfunc"
+	keyfunc "github.com/pmishchenko-ua/jwt-keyfunc"
 )
 
 func TestBadCurve(t *testing.T) {
@@ -24,7 +24,7 @@ func TestBadCurve(t *testing.T) {
 	// The number of parsed keys should be 0.
 
 	_, err = jwt.Parse(someJWT, jwks.Keyfunc)
-	if !errors.Is(err, keyfunc.ErrKIDNotFound) {
-		t.Fatalf("Expected ErrKIDNotFound, got %v", err)
+	if !errors.Is(err, keyfunc.ErrNoMatchingKey) {
+		t.Fatalf("Expected ErrNoMatchingKey, got %v", err)
 	}
 }

@@ -41,10 +41,11 @@ func Get(jwksURL string, options Options) (jwks *JWKS, err error) {
 			UseSignature: {},
 		}
 	}
-
-	err = jwks.refresh()
-	if err != nil {
-		return nil, err
+	if !jwks.initAsync {
+		err = jwks.refresh()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if jwks.refreshInterval != 0 || jwks.refreshUnknownKID {
@@ -68,6 +69,11 @@ func (j *JWKS) backgroundRefresh() {
 
 	// Create a channel that will never send anything unless there is a refresh interval.
 	refreshInterval := make(<-chan time.Time)
+
+	// When j.initAsync is true, we want to trigger refresh immediately
+	if j.initAsync {
+		j.refreshRequests <- func() {}
+	}
 
 	// Enter an infinite loop that ends when the background ends.
 	for {
@@ -187,9 +193,15 @@ func (j *JWKS) refresh() (err error) {
 				}
 			}
 
-			j.keys[kid] = parsedJWK{public: key.inter}
+			j.keys[kid] = []ParsedJWK{
+				{
+					Public:    key.inter,
+					kid:       kid,
+					algorithm: key.algorithm,
+					kty:       GetTypeForAlg(key.algorithm),
+				},
+			}
 		}
 	}
-
 	return nil
 }

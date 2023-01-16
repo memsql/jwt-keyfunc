@@ -1,0 +1,4 @@
+{
+  "project_id" : "jwt-keyfunc",
+  "phabricator.uri" : "https:\/\/grizzly.internal.memcompute.com\/api\/"
+}

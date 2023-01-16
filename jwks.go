@@ -96,6 +96,31 @@ type rawJWKS struct {
 	Keys []*JsonWebKey `json:"keys"`
 }
 
+// toStringSlice transform input interface which is actually either
+// - string which represents a comma-separated list of strings
+// - list of strings
+// to the actual string slice.
+// If the input is none of the above, empty slice is returned
+func toStringSlice(input interface{}) []string {
+	var result []string 
+	if input == nil {
+		return result
+	}
+	if inputStr, ok := input.(string); ok {
+		result = strings.Split(inputStr, ",")
+		for idx := range result {
+			result[idx] = strings.TrimSpace(result[idx])
+		}
+	} else if inputList, ok := input.([]interface{}); ok {
+		for _, inputInter := range inputList {
+			if inputVal, ok := inputInter.(string); ok {
+				result = append(result, strings.TrimSpace(inputVal))
+			}
+		}
+	}
+	return result
+}
+
 // NewJSON creates a new JWKS from a raw JSON message.
 func NewJSON(jwksBytes json.RawMessage) (jwks *JWKS, err error) {
 	var rawKS rawJWKS
@@ -137,14 +162,9 @@ func NewJSON(jwksBytes json.RawMessage) (jwks *JWKS, err error) {
 		}
 		audience := make([]string, 0)
 		if key.Audience != nil {
-			if audStr, ok := key.Audience.(string); ok {
-				audience = strings.Split(audStr, ",")
-			} else if audList, ok := key.Audience.([]string); ok {
-				audience = audList
+			if audience = toStringSlice(key.Audience); len(audience) == 0 {
+				return nil, fmt.Errorf("invalid `aud` claim in one of the keys in JWKS",)
 			}
-		}
-		for idx := range audience {
-			audience[idx] = strings.TrimSpace(audience[idx])
 		}
 
 		jwks.keys[key.ID] = append(jwks.keys[key.ID],
@@ -257,6 +277,14 @@ func GetTypeForAlg(alg string) string {
 
 func (j *JWKS) filterKeys(alg string, token *jwt.Token, parsedKeys []ParsedJWK) []*ParsedJWK {
 	var result []*ParsedJWK
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return result
+	}
+	var audToken []string
+	if audTokenClaim, ok := claims["aud"]; ok {
+		audToken = toStringSlice(audTokenClaim)
+	}
 	for idx, key := range parsedKeys {
 		if (key.algorithm == alg || (key.algorithm == "" && GetTypeForAlg(alg) == key.kty)) && j.canUseKey(key) {
 			audienceMatch := false
@@ -264,30 +292,11 @@ func (j *JWKS) filterKeys(alg string, token *jwt.Token, parsedKeys []ParsedJWK) 
 			// If the matching JWK includes an aud (Audience) field which does not match the aud field in the JWT, then the authentication request is rejected.
 			// The aud field can be a string or an array of strings. If any aud string of the JWT matches any aud string of the JWK, it is considered a match.
 			if len(key.audience) == 0 {
-				// If the matching JWK does not define an audience (aud), audience checking is skipped. Note that aud is not a standard field in JWK.
+				// If the matching JWK does not define an audience (aud), audience checking is skipped
 				audienceMatch = true
 			} else {
-				var audToken []string
-				claims, ok := token.Claims.(jwt.MapClaims)
-				if !ok {
-					return result
-				}
-				audTokenInter, ok := claims["aud"]
-				if ok {
-					audTokenStr, ok := audTokenInter.(string)
-					if ok {
-						// audToken is a comma-separated string
-						audToken = strings.Split(audTokenStr, ",")
-					} else {
-						// audToken is an array of strings
-						audToken, _ = audTokenInter.([]string)
-					}
-					for idx := range audToken {
-						audToken[idx] = strings.TrimSpace(audToken[idx])
-					}
-					// If any aud string of the JWT matches any aud string of the JWK, it is considered a match
-					audienceMatch = checkSlicesIntersect(audToken, key.audience)
-				}
+				// If any aud string of the JWT matches any aud string of the JWK, it is considered a match
+				audienceMatch = checkSlicesIntersect(audToken, key.audience)
 			}
 			if audienceMatch {
 				result = append(result, &parsedKeys[idx])
@@ -321,11 +330,28 @@ func (j *JWKS) GetMatchingKeys(token *jwt.Token) ([]*ParsedJWK, error) {
 	}
 
 	var kid string
+	var claims jwt.MapClaims
+	// kid can be a part of the header https://www.rfc-editor.org/rfc/rfc7515#section-4.1.4
 	kidInter, ok := token.Header["kid"]
 	if ok {
 		kid, ok = kidInter.(string)
 		if !ok {
 			return result, fmt.Errorf("could not convert `kid` in JWT header to string")
+		}
+	}
+	// if no kid in header, we check for kid in JWT body
+	if (kid == "") {
+		claims, ok = token.Claims.(jwt.MapClaims)
+		if !ok {
+			return result, fmt.Errorf("cannot get claims from the token %s", token.Raw)
+		}
+		kidInter, ok := claims["kid"]
+		// kid is present in jwt claims
+		if ok {
+			kid, ok = kidInter.(string)
+			if !ok {
+				return result, fmt.Errorf("could not convert `kid` in JWT claims to string")
+			}
 		}
 	}
 
@@ -338,30 +364,25 @@ func (j *JWKS) GetMatchingKeys(token *jwt.Token) ([]*ParsedJWK, error) {
 		// when "kid" is present in JWT, we match only keys with the same kid
 		return result, nil
 	}
-	var iss string
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return result, fmt.Errorf("cannot get claims from the token %s", token.Raw)
-	}
+	iss := ""
 	issInter, ok := claims["iss"]
-	// iss is present in jwt
+	// iss is present in jwt claims
 	if ok {
 		iss, ok = issInter.(string)
 		if !ok {
-			return result, fmt.Errorf("could not convert `iss` in JWT header to string")
+			return result, fmt.Errorf("could not convert `iss` in JWT claims to string")
 		}
 	}
 	if iss != "" {
 		if parsedKeys, ok := j.keys[iss]; ok {
 			result = j.filterKeys(alg, token, parsedKeys)
+			return result, nil
 		}
 	}
 	// no "kid" and no match with "iss", use "alg" only
-	if len(result) == 0 {
-		for _, parsedKeys := range j.keys {
-			currentResult := j.filterKeys(alg, token, parsedKeys)
-			result = append(result, currentResult...)
-		}
+	for _, parsedKeys := range j.keys {
+		currentResult := j.filterKeys(alg, token, parsedKeys)
+		result = append(result, currentResult...)
 	}
 	return result, nil
 }

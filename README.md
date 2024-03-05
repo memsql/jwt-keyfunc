@@ -2,6 +2,8 @@
 
 # keyfunc
 
+**Attention**: The code in this repository is intended for experimental use only and is not fully tested, documented, or supported by SingleStore. Visit the [SingleStore Forums](https://www.singlestore.com/forum/) to ask questions about this repository.
+
 The purpose of this package is to provide a
 [`jwt.Keyfunc`](https://pkg.go.dev/github.com/golang-jwt/jwt#Keyfunc) for the
 [github.com/golang-jwt/jwt](https://github.com/golang-jwt/jwt) package using a JSON Web Key Set (JWK Set or JWKS) for
